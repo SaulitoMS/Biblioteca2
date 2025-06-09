@@ -15,10 +15,10 @@ CORS(app)  # Permitir CORS para todas las rutas
 
 # Configuración de la base de datos
 DATABASE_CONFIG = {
-    'host': os.getenv('PGHOST', 'localhost'),
-    'database': os.getenv('PGDATABASE', 'biblioteca_db'),
-    'user': os.getenv('PGUSER', 'postgres'),
-    'password': os.getenv('PGPASSWORD', 'saulito123'),
+    'host': os.getenv('PGHOST', 'dpg-d1387a6mcj7s7382rc40-a.oregon-postgres.render.com'),
+    'database': os.getenv('PGDATABASE', 'biblioteca_db_rmck'),
+    'user': os.getenv('PGUSER', 'biblioteca_db_rmck_user'),
+    'password': os.getenv('PGPASSWORD', 'Hdg8tdywlk8IFh1ZTPWq2RnzrIIqlhci'),
     'port': os.getenv('PGPORT', '5432')
 }
 
@@ -492,7 +492,17 @@ def health_check():
         'timestamp': datetime.datetime.now().isoformat()
     })
 
-# Cambiar la última línea por:
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(debug=False, host='0.0.0.0', port=port)
+    # Inicializar base de datos
+    print("Inicializando base de datos...")
+    if init_database():
+        print("✅ Base de datos inicializada correctamente")
+        print("🚀 Iniciando servidor Flask...")
+        print("📚 API de Biblioteca disponible")
+        print("🔐 Usuario de prueba: admin / 123456")
+        
+        # Para producción en Render
+        port = int(os.environ.get('PORT', 5000))
+        app.run(debug=False, host='0.0.0.0', port=port)
+    else:
+        print("❌ Error inicializando base de datos")
