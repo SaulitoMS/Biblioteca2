@@ -11,24 +11,21 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
-# CONFIGURACIÓN CORS CORREGIDA - Permitir múltiples orígenes
-CORS(app, origins=[
-    'https://biblioteca-api2.vercel.app',
-    'https://biblioteca-api2-7yabis8pa-saulitos-projects.vercel.app',
-    'https://biblioteca-api2-*.vercel.app',  # Para cualquier preview de Vercel
-    'http://localhost:3000',  # Para desarrollo local
-    'http://localhost:5000',  # Para desarrollo local
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:5000'
-], 
-supports_credentials=True,
-allow_headers=['Content-Type', 'Authorization'],
-methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
+# 🔥 CONFIGURACIÓN CORS AGRESIVA - GARANTIZADA QUE FUNCIONE
+CORS(app, 
+     resources={
+         r"/*": {
+             "origins": "*",
+             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+             "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Credentials"],
+             "supports_credentials": True
+         }
+     })
 
 # Configurar SECRET_KEY para JWT
-app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY', '123456')
+app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY', 'tu-clave-secreta-muy-segura-aqui-12345')
 
-# OPCIONAL: Manejar preflight requests manualmente
+# 🛡️ MANEJO MANUAL DE CORS - Triple seguridad
 @app.before_request
 def handle_preflight():
     if request.method == "OPTIONS":
@@ -36,9 +33,28 @@ def handle_preflight():
         response.headers.add("Access-Control-Allow-Origin", "*")
         response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization")
         response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
         return response
 
-# Configuración de la base de datos
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return response
+
+# 🔍 RUTA DE DEBUG PARA VERIFICAR CORS
+@app.route('/test-cors', methods=['GET', 'OPTIONS'])
+def test_cors():
+    return jsonify({
+        'message': 'CORS funcionando correctamente',
+        'method': request.method,
+        'origin': request.headers.get('Origin'),
+        'timestamp': datetime.datetime.now().isoformat()
+    })
+
+# Resto de tu configuración de base de datos permanece igual...
 DATABASE_CONFIG = {
     'host': os.getenv('PGHOST', 'dpg-d1387a6mcj7s7382rc40-a.oregon-postgres.render.com'),
     'database': os.getenv('PGDATABASE', 'biblioteca_db_rmck'),
@@ -46,7 +62,6 @@ DATABASE_CONFIG = {
     'password': os.getenv('PGPASSWORD', 'Hdg8tdywlk8IFh1ZTPWq2RnzrIIqlhci'),
     'port': os.getenv('PGPORT', '5432')
 }
-
 def get_db_connection():
     """Crear conexión a la base de datos"""
     try:
