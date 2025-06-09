@@ -10,7 +10,10 @@ import os
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-CORS(app, origins=['https://biblioteca-api2.vercel.app/'])
+CORS(app, origins=['https://biblioteca-api2.vercel.app'])
+
+# Configurar SECRET_KEY para JWT
+app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY', 'tu-clave-secreta-muy-segura-aqui-12345')
 
 # Configuración de la base de datos
 DATABASE_CONFIG = {
@@ -145,9 +148,9 @@ def token_required(f):
     
     return decorated
 
-# RUTAS DE LA API
+# RUTAS DE LA API (SIN PREFIJO /api)
 
-@app.route('/api/login', methods=['POST'])
+@app.route('/login', methods=['POST'])
 def login():
     """Autenticación de usuario"""
     try:
@@ -195,7 +198,7 @@ def login():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/books', methods=['GET'])
+@app.route('/books', methods=['GET'])
 @token_required
 def get_books(current_user_id):
     """Obtener todos los libros"""
@@ -243,7 +246,7 @@ def get_books(current_user_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/books/<int:book_id>', methods=['GET'])
+@app.route('/books/<int:book_id>', methods=['GET'])
 @token_required
 def get_book(current_user_id, book_id):
     """Obtener un libro específico"""
@@ -272,7 +275,7 @@ def get_book(current_user_id, book_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/books/<int:book_id>/borrow', methods=['POST'])
+@app.route('/books/<int:book_id>/borrow', methods=['POST'])
 @token_required
 def borrow_book(current_user_id, book_id):
     """Prestar un libro"""
@@ -320,7 +323,7 @@ def borrow_book(current_user_id, book_id):
         conn.rollback()
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/books/<int:book_id>/return', methods=['POST'])
+@app.route('/books/<int:book_id>/return', methods=['POST'])
 @token_required
 def return_book(current_user_id, book_id):
     """Devolver un libro"""
@@ -369,7 +372,7 @@ def return_book(current_user_id, book_id):
         conn.rollback()
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/stats', methods=['GET'])
+@app.route('/stats', methods=['GET'])
 @token_required
 def get_stats(current_user_id):
     """Obtener estadísticas de la biblioteca"""
@@ -412,7 +415,7 @@ def get_stats(current_user_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/categories', methods=['GET'])
+@app.route('/categories', methods=['GET'])
 @token_required
 def get_categories(current_user_id):
     """Obtener todas las categorías"""
@@ -436,7 +439,7 @@ def get_categories(current_user_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/books', methods=['POST'])
+@app.route('/books', methods=['POST'])
 @token_required
 def add_book(current_user_id):
     """Agregar un nuevo libro"""
@@ -482,7 +485,7 @@ def add_book(current_user_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/health', methods=['GET'])
+@app.route('/health', methods=['GET'])
 def health_check():
     """Verificar estado de la API"""
     return jsonify({
