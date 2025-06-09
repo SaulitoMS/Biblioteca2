@@ -10,10 +10,33 @@ import os
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-CORS(app, origins=['https://biblioteca-api2.vercel.app'])
+
+# CONFIGURACIÓN CORS CORREGIDA - Permitir múltiples orígenes
+CORS(app, origins=[
+    'https://biblioteca-api2.vercel.app',
+    'https://biblioteca-api2-7yabis8pa-saulitos-projects.vercel.app',
+    'https://biblioteca-api2-*.vercel.app',  # Para cualquier preview de Vercel
+    'http://localhost:3000',  # Para desarrollo local
+    'http://localhost:5000',  # Para desarrollo local
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5000'
+], 
+supports_credentials=True,
+allow_headers=['Content-Type', 'Authorization'],
+methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
 
 # Configurar SECRET_KEY para JWT
-app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY', 'tu-clave-secreta-muy-segura-aqui-12345')
+app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY', '123456')
+
+# OPCIONAL: Manejar preflight requests manualmente
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = jsonify({'status': 'OK'})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization")
+        response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
+        return response
 
 # Configuración de la base de datos
 DATABASE_CONFIG = {
