@@ -10,7 +10,7 @@ import os
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-CORS(app, origins=['https://tu-proyecto.vercel.app'])
+CORS(app, origins=['https://biblioteca-api2.vercel.app/'])
 
 # Configuración de la base de datos
 DATABASE_CONFIG = {
