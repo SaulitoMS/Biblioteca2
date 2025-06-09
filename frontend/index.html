@@ -275,12 +275,13 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Configuración de la API
-        const API_BASE_URL = 'https://biblioteca-api-bmde.onrender.com/';
+        // Configuración de la API - CORREGIDO
+        const API_BASE_URL = 'https://biblioteca-api-bmde.onrender.com'; // SIN SLASH AL FINAL
         let authToken = null;
         let currentUser = null;
         let books = [];
         let filteredBooks = [];
+        
 
         // Funciones de utilidad
         function showAlert(type, message, duration = 5000) {
@@ -315,7 +316,7 @@
             }
         }
 
-        // Funciones de API
+        // Funciones de API - CORRIGIENDO EL DOBLE SLASH
         async function apiCall(endpoint, options = {}) {
             try {
                 const config = {
@@ -330,7 +331,11 @@
                     config.headers['Authorization'] = `Bearer ${authToken}`;
                 }
 
-                const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+                // ARREGLAR: endpoint ya debe empezar con '/', no agregar otro '/'
+                const url = `${API_BASE_URL}${endpoint}`;
+                console.log('Making request to:', url); // Para debugging
+                
+                const response = await fetch(url, config);
                 const data = await response.json();
 
                 if (!response.ok) {
