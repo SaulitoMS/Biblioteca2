@@ -11,38 +11,17 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
-# 🔥 CONFIGURACIÓN CORS AGRESIVA - GARANTIZADA QUE FUNCIONE
+# 🔧 CONFIGURACIÓN CORS SIMPLIFICADA - SIN DUPLICACIÓN
 CORS(app, 
-     resources={
-         r"/*": {
-             "origins": "*",
-             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-             "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Credentials"],
-             "supports_credentials": True
-         }
-     })
+     origins=["https://biblioteca-api2-git-main-saulitos-projects.vercel.app", "*"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+     allow_headers=["Content-Type", "Authorization"],
+     supports_credentials=True)
 
 # Configurar SECRET_KEY para JWT
 app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY', 'tu-clave-secreta-muy-segura-aqui-12345')
 
-# 🛡️ MANEJO MANUAL DE CORS - Triple seguridad
-@app.before_request
-def handle_preflight():
-    if request.method == "OPTIONS":
-        response = jsonify({'status': 'OK'})
-        response.headers.add("Access-Control-Allow-Origin", "*")
-        response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization")
-        response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
-        response.headers.add('Access-Control-Allow-Credentials', 'true')
-        return response
-
-@app.after_request
-def after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
-    response.headers.add('Access-Control-Allow-Credentials', 'true')
-    return response
+# 🚫 REMOVIDO: Decoradores manuales de CORS que causaban duplicación
 
 # 🔍 RUTA DE DEBUG PARA VERIFICAR CORS
 @app.route('/test-cors', methods=['GET', 'OPTIONS'])
@@ -54,7 +33,7 @@ def test_cors():
         'timestamp': datetime.datetime.now().isoformat()
     })
 
-# Resto de tu configuración de base de datos permanece igual...
+# Configuración de base de datos
 DATABASE_CONFIG = {
     'host': os.getenv('PGHOST', 'dpg-d1387a6mcj7s7382rc40-a.oregon-postgres.render.com'),
     'database': os.getenv('PGDATABASE', 'biblioteca_db_rmck'),
@@ -62,6 +41,7 @@ DATABASE_CONFIG = {
     'password': os.getenv('PGPASSWORD', 'Hdg8tdywlk8IFh1ZTPWq2RnzrIIqlhci'),
     'port': os.getenv('PGPORT', '5432')
 }
+
 def get_db_connection():
     """Crear conexión a la base de datos"""
     try:
@@ -186,13 +166,17 @@ def token_required(f):
     
     return decorated
 
-# RUTAS DE LA API (SIN PREFIJO /api)
+# RUTAS DE LA API
 
 @app.route('/login', methods=['POST'])
 def login():
     """Autenticación de usuario"""
     try:
         data = request.get_json()
+        
+        if not data:
+            return jsonify({'error': 'No se recibieron datos JSON'}), 400
+            
         username = data.get('username')
         password = data.get('password')
         
@@ -234,7 +218,8 @@ def login():
             return jsonify({'error': 'Credenciales inválidas'}), 401
     
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"Error en login: {e}")
+        return jsonify({'error': f'Error interno del servidor: {str(e)}'}), 500
 
 @app.route('/books', methods=['GET'])
 @token_required
@@ -529,7 +514,24 @@ def health_check():
     return jsonify({
         'status': 'OK',
         'message': 'API de Biblioteca funcionando correctamente',
-        'timestamp': datetime.datetime.now().isoformat()
+        'timestamp': datetime.datetime.now().isoformat(),
+        'endpoints': ['/login', '/books', '/stats', '/categories', '/health', '/test-cors']
+    })
+
+@app.route('/', methods=['GET'])
+def root():
+    """Endpoint raíz"""
+    return jsonify({
+        'message': 'API de Biblioteca Digital',
+        'version': '1.0.0',
+        'status': 'Funcionando',
+        'endpoints': {
+            'login': '/login',
+            'books': '/books',
+            'stats': '/stats', 
+            'categories': '/categories',
+            'health': '/health'
+        }
     })
 
 if __name__ == '__main__':
