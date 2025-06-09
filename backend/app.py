@@ -10,8 +10,7 @@ import os
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'biblioteca'  # Cambiar en producción
-CORS(app)  # Permitir CORS para todas las rutas
+CORS(app, origins=['https://tu-proyecto.vercel.app'])
 
 # Configuración de la base de datos
 DATABASE_CONFIG = {
